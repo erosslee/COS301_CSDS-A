@@ -1,0 +1,4 @@
+#1.	Install all dependencies in the package.json file
+	$ sudo npm install missing --save 
+#2. Run the Run.bat file or run app.js file
+	$ nodejs app.js
