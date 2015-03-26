@@ -45,71 +45,39 @@ function authUser(username,password)
 
 }
 
-var dn = 'this should be something else';
-function findUser(username,password)
-{
+var dn = '';
+function findUser(username,password){
     client = ldap.createClient({url: 'ldap://reaper.up.ac.za:'});
-    //console.log('1Value of found: '+found);
-    //console.log('in findUser()');
-    //var userObject;
-    //var found = false;
     var opts = {
         filter: 'uid='+username,
         scope: 'sub'
     };
+
     console.log('searching for user: '+username);
-    client.search(base, opts, function (err, res)
-    {
+    function callback(err,res){
         assert.ifError(err);
 
-        res.on('searchEntry', function (entry)
-        {
-            //userObject = JSON.parse(JSON.stringify(entry.object));
-            //userObject = (JSON.stringify(entry.object)).toString();
+        res.on('searchEntry', (function (entry) {
             console.log(JSON.parse(JSON.stringify(entry.object)));
-            //console.log('type of userObject: ' + typeof userObject);
-            //userObject = entry.object.dn;
-            //console.log('userObject: '+userObject);
             var user = JSON.parse(JSON.stringify(entry.object));
-            if(typeof entry.object.dn == "string")
-            {
-                //window.dn =entry.object.dn;
-                setDnTest(entry.object.dn);
+            if (typeof user.dn == "string") {
+                setDnTest(user.dn);
                 found = true;
             }
-            if(found)
-            {
-                console.log('User '+username+' found');
-                console.log('User object: '+(JSON.parse(JSON.stringify(entry.object))));
-                //bind as user
-                auth(entry.object.dn,password,output);
-                //console.log(tmp);
+            if (found) {
+                console.log('User ' + username + ' found');
+                console.log('User object: ' + JSON.stringify(entry.object));
+                auth(entry.object.dn, password, output);
                 findUserModules(username);
+                getActiveModulesForYear();
             }
-            //return userObject;
-            //dn.push(entry.object.dn);
+        }));
+        res.on('error',function(err){
+            console.error('error: '+ err.message);
         });
-        /*res.on('searchReference', function (referral)
-        {
-            console.log('referral: ' + referral.uris.join());
-        });
-        res.on('error', function (err)
-        {
-            console.error('error: ' + err.message);
-        });
-        res.on('end', function (result)
-        {
-            console.log('status: ' + result.status);
-        });
-        console.log('type of test: '+typeof test);
-        test = JSON.stringify(test);
-        console.log('test: '+test);
-        console.log(res);*/
-    });
-    //console.log(typeof dn);
-    //console.log(dn);
-    //console.log('leaving findUser()');
-    return true;
+        return found;
+    }
+    client.search(base, opts,callback);
 }
 
 function findUserModules(memberUid)
@@ -130,9 +98,31 @@ function findUserModules(memberUid)
     });
 }
 
+//Active modules for the year
+function getActiveModulesForYear(){
+    client = ldap.createClient({url: 'ldap://reaper.up.ac.za:'});
+    var opts = {
+        filter: ('cn=lect_' + '*'),
+        scope: 'sub'
+    };
+    var modulesObject;
+    var modulesDn;
+
+    client.search(base,opts, function(err,res){
+        assert.ifError(err);
+        res.on('searchEntry', function (entry)
+        {
+            modulesDn = JSON.stringify(entry.object.cn);
+            modulesObject = (JSON.parse(modulesDn));
+           console.log(modulesObject);
+        });
+
+    });
+}
+
 function setDnTest(string)
 {
-    console.log("This should be in the above line: "+string);
+    console.log("Dn has been set to: "+string);
     dn = string;
 }
 function login(username,password)
