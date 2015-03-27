@@ -62,7 +62,7 @@ function findUser(username,password){
             }
             if (found) {
                 console.log('User ' + username + ' found');
-                console.log('User object: ' + JSON.stringify(entry.object));
+                //console.log('User object: ' + JSON.stringify(entry.object));
                 auth(entry.object.dn, password, output);
                 findUserModules(username);
                 getActiveModulesForYear();
@@ -72,7 +72,6 @@ function findUser(username,password){
         res.on('error',function(err){
             console.error('error: '+ err.message);
         });
-        return found;
     }
     client.search(base, opts,callback);
 }
@@ -81,16 +80,21 @@ function findUser(username,password){
 function findUserModules(memberUid)
 {
     client = ldap.createClient({url: 'ldap://reaper.up.ac.za:'});
+    var parseFilter = require('ldapjs').parseFilter;
+    var f = parseFilter('(&(memberuid='+memberUid+')(cn=stud_' + '*))');
+
     var opts = {
-        filter: 'memberUid='+memberUid,
+        filter: f,
         scope: 'sub'
     };
     client.search(base, opts, function (err, res)
     {
         assert.ifError(err);
+
         res.on('searchEntry', function (entry)
         {
-            console.log('entry modules: ' + JSON.parse(JSON.stringify(entry.object.cn)));
+            var moduleCode = entry.object.cn.slice(-6);
+            console.log('Active Module: ' + moduleCode);
         });
     });
 }
@@ -135,8 +139,9 @@ function getActiveModulesForYear(){
 
 function setDnTest(string)
 {
-    console.log("Dn has been set to: "+string);
     dn = string;
+    string = dn;
+    console.log("Dn has been set to: "+string);
 }
 
 function login(username,password)
