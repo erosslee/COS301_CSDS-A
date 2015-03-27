@@ -7,20 +7,17 @@ var base = 'ou=Computer Science,o=University of Pretoria,c=ZA';
 function auth(dn, password, callback)
 {
     client = ldap.createClient({url: 'ldap://reaper.up.ac.za:'});
-    client.bind(dn, password, function (err)
-    {
+    client.bind(dn, password, function (err){
         client.unbind();
         callback(err === null, err);
     });
 }
 
 //auth('uid=u89000100,ou=Students,ou=Computer Science,o=University of Pretoria,c=ZA', 'Misters', output);
-
 //bind anonymously
 function anonBind(cb)
 {
-    client.bind('','', function (err)
-    {
+    client.bind('','', function (err){
         //do something
         client.unbind();
         cb(err === null, err);
@@ -35,14 +32,12 @@ function output(res, err) {
     }
 }
 
-//anonBind('',outputTest);
-//var userObject;
+
 var found = false;
 
 function authUser(username,password)
 {
     client = ldap.createClient({url: 'ldap://reaper.up.ac.za:'});
-
 }
 
 var dn = '';
@@ -58,6 +53,7 @@ function findUser(username,password){
         assert.ifError(err);
 
         res.on('searchEntry', (function (entry) {
+            //JSON obj to string
             console.log(JSON.parse(JSON.stringify(entry.object)));
             var user = JSON.parse(JSON.stringify(entry.object));
             if (typeof user.dn == "string") {
@@ -70,6 +66,7 @@ function findUser(username,password){
                 auth(entry.object.dn, password, output);
                 findUserModules(username);
                 getActiveModulesForYear();
+                getUserRolesForModules(username);
             }
         }));
         res.on('error',function(err){
@@ -80,20 +77,37 @@ function findUser(username,password){
     client.search(base, opts,callback);
 }
 
+//
 function findUserModules(memberUid)
 {
     client = ldap.createClient({url: 'ldap://reaper.up.ac.za:'});
     var opts = {
-        filter: 'memberuid='+memberUid,
+        filter: 'memberUid='+memberUid,
         scope: 'sub'
     };
     client.search(base, opts, function (err, res)
     {
         assert.ifError(err);
-
         res.on('searchEntry', function (entry)
         {
-            console.log('entry: '+JSON.parse(JSON.stringify(entry.object)).toString());
+            console.log('entry modules: ' + JSON.parse(JSON.stringify(entry.object.cn)));
+        });
+    });
+}
+
+//Users role for a module
+function getUserRolesForModules(memberUid){
+    client = ldap.createClient({url: 'ldap://reaper.up.ac.za:'});
+    var opts = {
+        filter: 'memberUid='+memberUid,
+        scope: 'sub'
+    };
+    client.search(base, opts, function (err, res)
+    {
+        assert.ifError(err);
+        res.on('searchEntry', function (entry)
+        {
+            console.log('Module role: ' + JSON.parse(JSON.stringify(entry.object.cn)));
         });
     });
 }
@@ -107,7 +121,7 @@ function getActiveModulesForYear(){
     };
     var modulesObject;
     var modulesDn;
-
+    //console.log('Active modules for the year: ');
     client.search(base,opts, function(err,res){
         assert.ifError(err);
         res.on('searchEntry', function (entry)
@@ -116,7 +130,6 @@ function getActiveModulesForYear(){
             modulesObject = (JSON.parse(modulesDn));
            console.log(modulesObject);
         });
-
     });
 }
 
@@ -125,25 +138,22 @@ function setDnTest(string)
     console.log("Dn has been set to: "+string);
     dn = string;
 }
+
 function login(username,password)
 {
     //first verify that user exists, return dn if they exist
-
-    if(findUser(username,password))
-    {
+    if(findUser(username,password)){
+        console.log('logged in!');
         console.log('DN after find: '+dn);
     }
-    //authUser(username,password);
-    //console.log('tmp: '+tmp);
-    //console.log('dn: '+JSON.parse(JSON.stringify(object)));
-    //console.log('dn for user '+username+': '+object);
-    //console.log(dn);
+    else{
+        //console.log('log in failed!');
+    }
 }
 
 function main()
 {
-    login('u89000100','Misters');
+    login('u89000609','Hammond');
 
 }
 main();
-//process.exit();
