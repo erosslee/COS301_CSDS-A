@@ -1,3 +1,6 @@
+//COS301 Authors CSDS-A
+//Construction in process
+
 var ldap = require('ldapjs');
 var assert = require('assert');
 var client;
