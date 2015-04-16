@@ -3,7 +3,7 @@
 
 var ldap = require('ldapjs');
 var assert = require('assert');
-var client;
+var client = ldap.createClient({url: 'ldap://reaper.up.ac.za:'});
 var base = 'ou=Computer Science,o=University of Pretoria,c=ZA';
 
 //binds using a user's dn and provided password
@@ -45,7 +45,6 @@ function authUser(username,password)
 
 var dn = '';
 function findUser(username,password){
-    client = ldap.createClient({url: 'ldap://reaper.up.ac.za:'});
     var opts = {
         filter: 'uid='+username,
         scope: 'sub'
@@ -57,55 +56,63 @@ function findUser(username,password){
 
         res.on('searchEntry', (function (entry) {
             //JSON obj to string
-            console.log(JSON.parse(JSON.stringify(entry.object)));
+            //console.log(JSON.parse(JSON.stringify(entry.object)));
             var user = JSON.parse(JSON.stringify(entry.object));
             if (typeof user.dn == "string") {
                 setDnTest(user.dn);
                 found = true;
             }
             if (found) {
-                console.log('User ' + username + ' found');
+                //console.log('User ' + username + ' found');
                 //console.log('User object: ' + JSON.stringify(entry.object));
                 auth(entry.object.dn, password, output);
-                findUserModules(username);
-                getActiveModulesForYear();
-                getUserRolesForModules(username);
-                getUsersWithRole('Tutor','COS110');
+                //findUserModules(username);
+                //getActiveModulesForYear();
+                //getUserRolesForModules(username);
+                //getUsersWithRole('student','COS110');
             }
         }));
         res.on('error',function(err){
             console.error('error: '+ err.message);
         });
+        res.on('end',function(result){
+            console.error('status: '+ result.status);
+        });
+
     }
     client.search(base, opts,callback);
 }
 
-//
-function findUserModules(memberUid)
-{
-    client = ldap.createClient({url: 'ldap://reaper.up.ac.za:'});
+//*************
+function findUserModules(memberUid,callback) {
     var parseFilter = require('ldapjs').parseFilter;
-    var f = parseFilter('(&(memberuid='+memberUid+')(cn=stud_' + '*))');
+    var f = parseFilter('(&(memberuid=' + memberUid + ')(cn=stud_' + '*))');
 
     var opts = {
         filter: f,
         scope: 'sub'
     };
-    client.search(base, opts, function (err, res)
-    {
-        assert.ifError(err);
 
-        res.on('searchEntry', function (entry)
+    client.search(base, opts, function (err, res) {
         {
-            var moduleCode = entry.object.cn.slice(-6);
-            console.log('Active Module: ' + moduleCode);
-        });
+            assert.ifError(err);
+            res.on('searchEntry', function (entry) {
+                var moduleCode = entry.object.cn.slice(-6);
+                //console.log('Active Module: ' + moduleCode);
+                callback(moduleCode);
+            });
+            res.on('error', function (err) {
+                console.error('error: ' + err.message);
+            });
+            res.on('end', function (result) {
+                console.error('status: ' + result.status);
+            });
+        }
     });
 }
 
 //Users role for a module
 function getUserRolesForModules(memberUid){
-    client = ldap.createClient({url: 'ldap://reaper.up.ac.za:'});
     var opts = {
         filter: 'memberUid='+memberUid,
         scope: 'sub'
@@ -117,12 +124,17 @@ function getUserRolesForModules(memberUid){
         {
             console.log('Module role: ' + JSON.parse(JSON.stringify(entry.object.cn)));
         });
+        res.on('error',function(err){
+            console.error('error: '+ err.message);
+        });
+        res.on('end',function(result){
+            console.error('status: '+ result.status);
+        });
     });
 }
 
 //Active modules for the year
 function getActiveModulesForYear(){
-    client = ldap.createClient({url: 'ldap://reaper.up.ac.za:'});
     var opts = {
         filter: ('cn=lect_' + '*'),
         scope: 'sub'
@@ -139,12 +151,17 @@ function getActiveModulesForYear(){
             var res = modulesObject.substring(5, 11);
             console.log(res);
         });
+        res.on('error',function(err){
+            console.error('error: '+ err.message);
+        });
+        res.on('end',function(result){
+            console.error('status: '+ result.status);
+        });
     });
 }
 
 //Users with particular role for particular module
 function getUsersWithRole(role,moduleCode){
-    client = ldap.createClient({url: 'ldap://reaper.up.ac.za:'});
     var Role;
     switch(role){
         case 'lecturer':
@@ -179,10 +196,53 @@ function getUsersWithRole(role,moduleCode){
         {
             modulesDn = JSON.stringify(entry.object.memberUid);
             modulesObject = (JSON.parse(modulesDn));
-            console.log('Tutors for COS110: ' + modulesObject);
+            console.log(role + ' for ' + moduleCode + ': ' + modulesObject);
+        });
+        res.on('error',function(err){
+            console.error('error: '+ err.message);
+        });
+        res.on('end',function(result){
+            console.error('status: '+ result.status);
         });
     });
 }
+
+
+//return
+function getUserEmail(username,callback) {
+    var parseFilter = require('ldapjs').parseFilter;
+    var email;
+    var opts = {
+        filter: 'uid='+username,
+        scope: 'sub'
+    };
+
+    client.search(base, opts, function (err, res) {
+        {
+            assert.ifError(err);
+            res.on('searchEntry', function (entry) {
+                email = entry.object.mail;
+                if(email == null)
+                    callback(username + '@tuks.co.za')
+                else
+                callback(email);
+            });
+
+            res.on('error', function (err) {
+                console.error('error: ' + err.message);
+            });
+            //must have
+            res.on('end', function (result) {
+                console.error('status: ' + result.status);
+            });
+        }
+    })
+}
+
+
+
+
+
 
 function setDnTest(string)
 {
@@ -191,21 +251,26 @@ function setDnTest(string)
     console.log("Dn has been set to: "+string);
 }
 
-function login(username,password)
+function login(username,password, res)
 {
     //first verify that user exists, return dn if they exist
-    if(findUser(username,password)){
+    findUser(username,password);
+    /*if(){
         console.log('logged in!');
         console.log('DN after find: '+dn);
     }
     else{
         //console.log('log in failed!');
-    }
+    }*/
 }
 
 function main()
 {
-    login('u89000609','Hammond');
-
+    //login('u89000609','Hammond',function(res){getUsersWithRole('student','COS110')});
+    login('u89000609','Hammond',findUserModules('u89000609',function(res){console.log(res)}));
+    //login('u89000609','Hammond',function(res){getActiveModulesForYear()});
+    //login('u89000609','Hammond',function(res){getUserRolesForModules('u89000609')});
+    login('u89000609','Hammond',getUserEmail('u89000609',function(res){console.log(res)}));
 }
+
 main();
