@@ -1,14 +1,3 @@
-//COS301 Authors CSDS-A
-//Construction in process
-
-//////////////////////UNIT TESTING
- //var test = require('unit.js');
-
-
-
-////////////////////////
-
-
 
 var ldap = require('ldapjs');
 var assert = require('assert');
@@ -25,7 +14,7 @@ function auth(dn, password, callback)
     });
 }
 
-//auth('uid=u89000100,ou=Students,ou=Computer Science,o=University of Pretoria,c=ZA', 'Misters', output);
+
 //bind anonymously
 function anonBind(cb)
 {
@@ -252,7 +241,7 @@ function setDnTest(string)
 {
     dn = string;
     string = dn;
-    console.log("Dn has been set to: "+string);
+    //console.log("Dn has been set to: "+string);
 }
 
 function login(username,password, res)
@@ -270,11 +259,11 @@ function login(username,password, res)
 
 function main()
 {
-    //login('u89000609','Hammond',function(res){getUsersWithRole('student','COS110')});
-    login('u89000609','Hammond',findUserModules('u89000609',function(res){console.log(res)}));
-    //login('u89000609','Hammond',function(res){getActiveModulesForYear()});
-    //login('u89000609','Hammond',function(res){getUserRolesForModules('u89000609')});
+ login('u89000609','Hammond',findUserModules('u89000609',function(res){console.log(res)}));
+  login('u89000609','Hammond',getActiveModulesForYear(function(res){console.log(res)}));
     login('u89000609','Hammond',getUserEmail('u89000609',function(res){console.log(res)}));
+   login('u89000609','Hammond',getUserRolesForModules('u89000609',function(res){console.log(res)}));
+   login('u89000609','Hammond',getUsersWithRole('student','COS110',function(res){console.log(res)}));
 }
 
 main();
