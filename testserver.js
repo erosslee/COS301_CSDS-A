@@ -2,7 +2,7 @@
 //Construction in process
 
 //////////////////////UNIT TESTING
- var test = require('unit.js');
+ //var test = require('unit.js');
 
 
 
@@ -247,10 +247,6 @@ function getUserEmail(username,callback) {
         }
     })
 }
-
-
-
-
 
 function setDnTest(string)
 {
