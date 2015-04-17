@@ -260,10 +260,17 @@ function login(username,password, res)
 function main()
 {
  login('u89000609','Hammond',findUserModules('u89000609',function(res){console.log(res)}));
+<<<<<<< HEAD
   login('u89000609','Hammond',getActiveModulesForYear(function(res){console.log(res)}));
     login('u89000609','Hammond',getUserEmail('u89000609',function(res){console.log(res)}));
    login('u89000609','Hammond',getUserRolesForModules('u89000609',function(res){console.log(res)}));
    login('u89000609','Hammond',getUsersWithRole('student','COS110',function(res){console.log(res)}));
+=======
+  // login('u89000609','Hammond',getActiveModulesForYear(function(res){console.log(res)}));
+    //login('u89000609','Hammond',getUserEmail('u89000609',function(res){console.log(res)}));
+   //login('u89000609','Hammond',getUserRolesForModules('u89000609',function(res){console.log(res)}));
+     //login('u89000609','Hammond',getUsersWithRole('student','COS110',function(res){console.log(res)}));
+>>>>>>> origin/master
 }
 
 main();
