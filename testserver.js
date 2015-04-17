@@ -1,6 +1,15 @@
 //COS301 Authors CSDS-A
 //Construction in process
 
+//////////////////////UNIT TESTING
+ var test = require('unit.js');
+
+
+
+////////////////////////
+
+
+
 var ldap = require('ldapjs');
 var assert = require('assert');
 var client = ldap.createClient({url: 'ldap://reaper.up.ac.za:'});
@@ -208,7 +217,7 @@ function getUsersWithRole(role,moduleCode){
 }
 
 
-//return
+//returns email address
 function getUserEmail(username,callback) {
     var parseFilter = require('ldapjs').parseFilter;
     var email;
@@ -238,7 +247,6 @@ function getUserEmail(username,callback) {
         }
     })
 }
-
 
 
 
